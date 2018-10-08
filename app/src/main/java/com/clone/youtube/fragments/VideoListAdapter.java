@@ -28,7 +28,11 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.View
 
         mListener = listener;
     }
-
+public void clear(){
+        if(mValues!=null)
+        mValues.clear();
+        notifyDataSetChanged();
+}
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
@@ -48,7 +52,6 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.View
         holder.mItem = mValues.get(position);
         holder.videoTitle.setText(mValues.get(position).getTitle());
         holder.vDetails.setText(createDetails(mValues.get(position)));
-        System.out.println("size : "+ Resources.getSystem().getDisplayMetrics().widthPixels);
         Picasso.get()
                 .load("http://img.youtube.com/vi/"+mValues.get(position).getId()+"/maxresdefault.jpg")
                 .resize(Resources.getSystem().getDisplayMetrics().widthPixels,0)

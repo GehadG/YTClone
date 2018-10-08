@@ -21,13 +21,12 @@ public class YoutubeService {
         search.setQ(query);
         search.setMaxResults(25l);
         search.setType("video");
-        search.setFields("items(id/videoId,snippet/title,snippet/description,snippet/thumbnails/high/url,snippet/publishedAt,snippet/channelTitle)");
+        search.setFields("nextPageToken,items(id/videoId,snippet/title,snippet/description,snippet/thumbnails/high/url,snippet/publishedAt,snippet/channelTitle)");
         if(pageToken!=null){
             search.setPageToken(pageToken);
         }
-            SearchListResponse result = search.execute();
-            System.out.println("Got Elements : "+result.getItems().size());
-        return  result;
+           return search.execute();
+
         } catch (IOException e) {
             e.printStackTrace();
         }

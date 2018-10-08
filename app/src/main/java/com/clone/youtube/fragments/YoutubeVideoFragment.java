@@ -3,20 +3,17 @@ package com.clone.youtube.fragments;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.GridLayoutManager;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.clone.youtube.models.YoutubeSearchResult;
-import com.clone.youtube.models.YoutubeVideo;
 import com.clone.youtube.util.YoutubeClient;
 import com.clone.youtube.youtubeclone.R;
-
-import java.util.List;
 
 import rx.Observer;
 import rx.Subscription;
@@ -24,32 +21,42 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 
-public class YoutubeVideoFragment extends Fragment {
+public class YoutubeVideoFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
     private static final String TAG = YoutubeVideoFragment.class.getSimpleName();
-    private static final String ARG_COLUMN_COUNT = "column-count";
+    private static final String QUERY_KEY = "query";
     private VideoListAdapter adapter ;
     private Subscription subscription;
-    private int mColumnCount = 1;
+    SwipeRefreshLayout mSwipeRefreshLayout;
+    private String nextPageToken;
+    private String currentQuery;
     private OnListFragmentInteractionListener mListener;
-private List<YoutubeVideo> videos;
+
     public YoutubeVideoFragment() {
     }
 
-    @SuppressWarnings("unused")
-    public static YoutubeVideoFragment newInstance(int columnCount) {
-        YoutubeVideoFragment fragment = new YoutubeVideoFragment();
-        Bundle args = new Bundle();
-        args.putInt(ARG_COLUMN_COUNT, columnCount);
-        fragment.setArguments(args);
-        return fragment;
-    }
+@Override
+public void onResume() {
+        if(currentQuery!=null) {
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(currentQuery);
+        }
+        else{
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Youtube Clone");
+        }
+        nextPageToken=null;
+        adapter.clear();
+    super.onResume();
+}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         if (getArguments() != null) {
-            mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
+            currentQuery = getArguments().getString(QUERY_KEY);
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(currentQuery);
+        }
+        else {
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Youtube Clone");
         }
     }
 
@@ -58,41 +65,56 @@ private List<YoutubeVideo> videos;
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_youtubevideo_list, container, false);
         adapter=new VideoListAdapter(mListener);
-        // Set the adapter
-        if (view instanceof RecyclerView) {
-            Context context = view.getContext();
-            RecyclerView recyclerView = (RecyclerView) view;
-            if (mColumnCount <= 1) {
-                recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            } else {
-                recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
-            }
+        mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary,
+                android.R.color.holo_green_dark,
+                android.R.color.holo_orange_dark,
+                android.R.color.holo_blue_dark);
+        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
+        recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
         recyclerView.setAdapter(adapter);
-     //       recyclerView.setAdapter(new VideoListAdapter(DummyContent.ITEMS, mListener));
-        }
-        loadInitVideos();
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+if(mSwipeRefreshLayout.isRefreshing())
+    return;
+                if (!recyclerView.canScrollVertically(1)) {
+                    loadVideos(currentQuery);
+
+                }
+            }
+        });
+        onRefresh();
+
         return view;
     }
 
-    private void loadInitVideos() {
+    private void loadVideos(String q) {
 
         subscription = YoutubeClient.getInstance()
-                .searchWithQuery(null,null)
+                .searchWithQuery(q,nextPageToken)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<YoutubeSearchResult>() {
                     @Override public void onCompleted() {
-                        Log.d(TAG, "In onCompleted()");
+                        mSwipeRefreshLayout.setRefreshing(false);
                     }
 
                     @Override public void onError(Throwable e) {
                         e.printStackTrace();
-                        Log.d(TAG, "In onError()");
+
+                        mSwipeRefreshLayout.setRefreshing(false);
                     }
 
                     @Override public void onNext(YoutubeSearchResult searchResult) {
-                        Log.d(TAG, "In onNext()");
+
+
                         adapter.addVideos(searchResult.getVideos());
+                        System.out.println("ITEM COUNT : " +adapter.getItemCount());
+                        nextPageToken=searchResult.getNextPageToken();
+
                     }
                 });
     }
@@ -119,6 +141,14 @@ public void onDestroy(){
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onRefresh() {
+        nextPageToken=null;
+        mSwipeRefreshLayout.setRefreshing(true);
+        adapter.clear();
+        loadVideos(currentQuery);
     }
 
     public interface OnListFragmentInteractionListener {
