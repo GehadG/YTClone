@@ -18,7 +18,8 @@ public class Converter {
                     i.getSnippet().getThumbnails().getHigh().getUrl(),
                     i.getSnippet().getTitle(),
                     i.getSnippet().getDescription(),
-                    i.getSnippet().getPublishedAt().getValue()
+                    i.getSnippet().getPublishedAt().getValue(),
+                    i.getSnippet().getChannelTitle()
             ));
         }
         return new YoutubeSearchResult(response.getNextPageToken(),videos);

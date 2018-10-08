@@ -9,7 +9,11 @@ import com.google.api.services.youtube.YouTube;
 
 import java.io.IOException;
 
-class YoutubeClient {
+import rx.Observable;
+import rx.Subscriber;
+
+
+public class YoutubeClient {
     private static YoutubeClient ourInstance ;
     //TODO : Define config or properties file to contain the api key
 
@@ -26,7 +30,7 @@ class YoutubeClient {
         service=new YoutubeService(youtube);
     }
 
-    static YoutubeClient getInstance() {
+    public static YoutubeClient getInstance() {
         if (ourInstance == null)
         {
             ourInstance=new YoutubeClient();
@@ -34,8 +38,20 @@ class YoutubeClient {
             return ourInstance;
     }
 
-    public YoutubeSearchResult searchWithQuery(String query, String pageToken){
-        return Converter.convertToVideoModel(service.search(query,pageToken));
+    public Observable<YoutubeSearchResult> searchWithQuery(final String query, final String pageToken){
+       return Observable.create(new Observable.OnSubscribe<YoutubeSearchResult>() {
+            @Override
+            public void call(Subscriber<? super YoutubeSearchResult> subscriber) {
+                try {
+                    subscriber.onNext(Converter.convertToVideoModel(service.search(query,pageToken)));    // Pass on the data to subscriber
+                    subscriber.onCompleted();     // Signal about the completion subscriber
+                } catch (Exception e) {
+                    subscriber.onError(e);        // Signal about the error to subscriber
+                }
+            }
+        });
+
+
     }
 
 }

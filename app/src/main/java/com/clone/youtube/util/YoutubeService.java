@@ -19,12 +19,15 @@ public class YoutubeService {
 
         search.setKey(API_KEY);
         search.setQ(query);
+        search.setMaxResults(25l);
         search.setType("video");
-        search.setFields("items(id/videoId,snippet/title,snippet/description,snippet/thumbnails/default/url,snippet/publishedAt)");
+        search.setFields("items(id/videoId,snippet/title,snippet/description,snippet/thumbnails/high/url,snippet/publishedAt,snippet/channelTitle)");
         if(pageToken!=null){
             search.setPageToken(pageToken);
         }
-        return search.execute();
+            SearchListResponse result = search.execute();
+            System.out.println("Got Elements : "+result.getItems().size());
+        return  result;
         } catch (IOException e) {
             e.printStackTrace();
         }
