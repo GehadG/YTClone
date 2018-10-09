@@ -2,19 +2,24 @@ package com.clone.youtube.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
-import com.clone.youtube.adapters.VideoListAdapter;
+import com.clone.youtube.adapters.CommentsAdapter;
 import com.clone.youtube.api.YoutubeClient;
-import com.clone.youtube.models.YoutubeSearchResult;
+import com.clone.youtube.models.CommentSearchResult;
 import com.clone.youtube.youtubeclone.R;
+import com.pierfrancescosoffritti.androidyoutubeplayer.player.YouTubePlayer;
+import com.pierfrancescosoffritti.androidyoutubeplayer.player.YouTubePlayerView;
+import com.pierfrancescosoffritti.androidyoutubeplayer.player.listeners.AbstractYouTubePlayerListener;
+import com.pierfrancescosoffritti.androidyoutubeplayer.player.listeners.YouTubePlayerInitListener;
 
 import rx.Observer;
 import rx.Subscription;
@@ -22,50 +27,43 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 
-public class YoutubeVideoFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
-    private static final String TAG = YoutubeVideoFragment.class.getSimpleName();
-    private static final String QUERY_KEY = "query";
-    private VideoListAdapter adapter ;
-    private Subscription subscription;
-    SwipeRefreshLayout mSwipeRefreshLayout;
-    private String nextPageToken;
-    private String currentQuery;
-    private OnListFragmentInteractionListener mListener;
+/**
+ * A fragment representing a list of Items.
+ * <p/>
+ * Activities containing this fragment MUST implement the {@link OnListFragmentInteractionListener}
+ * interface.
+ */
+public class YoutubeVideoPlayerFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
-    public YoutubeVideoFragment() {
+    private static final String VIDEO_ID = "videoId";
+    private static final String VIDEO_TITLE ="videoTitle" ;
+    SwipeRefreshLayout mSwipeRefreshLayout;
+    private OnListFragmentInteractionListener mListener;
+private String videoId;
+private String videoTitle;
+    private CommentsAdapter adapter ;
+    private Subscription subscription;
+    private String nextPageToken;
+
+    public YoutubeVideoPlayerFragment() {
     }
 
-@Override
-public void onResume() {
-        if(currentQuery!=null) {
-            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(currentQuery);
-        }
-        else{
-            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Youtube Clone");
-        }
-        nextPageToken=null;
-        adapter.clear();
-    super.onResume();
-}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         if (getArguments() != null) {
-            currentQuery = getArguments().getString(QUERY_KEY);
-            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(currentQuery);
-        }
-        else {
-            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Youtube Clone");
+            videoId = getArguments().getString(VIDEO_ID);
+            videoTitle= getArguments().getString(VIDEO_TITLE);
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_youtubevideo_list, container, false);
-        adapter=new VideoListAdapter(mListener,getActivity().getSupportFragmentManager());
+        View view = inflater.inflate(R.layout.fragment_comment_list, container, false);
+       adapter=new CommentsAdapter(mListener);
         mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe);
         mSwipeRefreshLayout.setOnRefreshListener(this);
         mSwipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary,
@@ -79,26 +77,41 @@ public void onResume() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
-if(mSwipeRefreshLayout.isRefreshing())
-    return;
+                if(mSwipeRefreshLayout.isRefreshing())
+                    return;
                 if (!recyclerView.canScrollVertically(1)) {
-                    loadVideos(currentQuery);
+                    loadComments();
 
                 }
             }
         });
-        onRefresh();
+        TextView title = (TextView) view.findViewById(R.id.title);
+        title.setText(videoTitle);
+        YouTubePlayerView youtubePlayerView = view.findViewById(R.id.youtube_player_view);
+        getLifecycle().addObserver(youtubePlayerView);
 
+        youtubePlayerView.initialize(new YouTubePlayerInitListener() {
+            @Override
+            public void onInitSuccess(@NonNull final YouTubePlayer initializedYouTubePlayer) {
+                initializedYouTubePlayer.addListener(new AbstractYouTubePlayerListener() {
+                    @Override
+                    public void onReady() {
+                        initializedYouTubePlayer.loadVideo(videoId, 0);
+                    }
+                });
+            }
+        }, true);
+ loadComments();
+ mSwipeRefreshLayout.setEnabled(false);
         return view;
     }
 
-    private void loadVideos(String q) {
-
+    private void loadComments() {
         subscription = YoutubeClient.getInstance()
-                .searchWithQuery(q,nextPageToken)
+                .getComments(videoId,nextPageToken)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<YoutubeSearchResult>() {
+                .subscribe(new Observer<CommentSearchResult>() {
                     @Override public void onCompleted() {
                         mSwipeRefreshLayout.setRefreshing(false);
                     }
@@ -109,10 +122,10 @@ if(mSwipeRefreshLayout.isRefreshing())
                         mSwipeRefreshLayout.setRefreshing(false);
                     }
 
-                    @Override public void onNext(YoutubeSearchResult searchResult) {
+                    @Override public void onNext(CommentSearchResult searchResult) {
 
 
-                        adapter.addVideos(searchResult.getVideos());
+                        adapter.addComments(searchResult.getComments());
                         nextPageToken=searchResult.getNextPageToken();
 
                     }
@@ -130,13 +143,7 @@ if(mSwipeRefreshLayout.isRefreshing())
                     + " must implement OnListFragmentInteractionListener");
         }
     }
-@Override
-public void onDestroy(){
-    if (subscription != null && !subscription.isUnsubscribed()) {
-        subscription.unsubscribe();
-    }
-    super.onDestroy();
-}
+
     @Override
     public void onDetach() {
         super.onDetach();
@@ -145,13 +152,10 @@ public void onDestroy(){
 
     @Override
     public void onRefresh() {
-        nextPageToken=null;
-        mSwipeRefreshLayout.setRefreshing(true);
-        adapter.clear();
-        loadVideos(currentQuery);
+
     }
 
-    public interface OnListFragmentInteractionListener {
 
+    public interface OnListFragmentInteractionListener {
     }
 }

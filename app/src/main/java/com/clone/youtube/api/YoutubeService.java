@@ -1,6 +1,7 @@
-package com.clone.youtube.util;
+package com.clone.youtube.api;
 
 import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.model.CommentThreadListResponse;
 import com.google.api.services.youtube.model.SearchListResponse;
 
 import java.io.IOException;
@@ -27,6 +28,23 @@ public class YoutubeService {
         }
            return search.execute();
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public CommentThreadListResponse getComments(String videoId, String pageToken){
+        YouTube.CommentThreads.List search = null;
+        try {
+            search=youtube.commentThreads().list("snippet,replies");
+            search.setKey(API_KEY);
+            search.setVideoId(videoId);
+            search.setMaxResults(100l);
+            if(pageToken!=null){
+                search.setPageToken(pageToken);
+            }
+            return search.execute();
         } catch (IOException e) {
             e.printStackTrace();
         }

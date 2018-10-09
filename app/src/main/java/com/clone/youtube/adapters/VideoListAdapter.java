@@ -1,6 +1,9 @@
-package com.clone.youtube.fragments;
+package com.clone.youtube.adapters;
 
 import android.content.res.Resources;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,9 +12,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.clone.youtube.fragments.YoutubeVideoFragment.OnListFragmentInteractionListener;
+import com.clone.youtube.fragments.YoutubeVideoPlayerFragment;
 import com.clone.youtube.models.YoutubeVideo;
 import com.clone.youtube.youtubeclone.R;
 import com.ocpsoft.pretty.time.PrettyTime;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -23,9 +28,11 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.View
 
     private final OnListFragmentInteractionListener mListener;
     private  List<YoutubeVideo> mValues;
-
-    public VideoListAdapter( OnListFragmentInteractionListener listener) {
-
+    private static final String VIDEO_ID = "videoId";
+    private static final String VIDEO_TITLE ="videoTitle" ;
+    private FragmentManager fragmentManager;
+    public VideoListAdapter( OnListFragmentInteractionListener listener,FragmentManager fragmentManager) {
+this.fragmentManager=fragmentManager;
         mListener = listener;
     }
 public void clear(){
@@ -54,14 +61,39 @@ public void clear(){
         holder.vDetails.setText(createDetails(mValues.get(position)));
         Picasso.get()
                 .load("http://img.youtube.com/vi/"+mValues.get(position).getId()+"/maxresdefault.jpg")
+                .placeholder(R.drawable.progress_loader)
+                .error(R.drawable.progress_loader)
                 .resize(Resources.getSystem().getDisplayMetrics().widthPixels,0)
-                .into(holder.thumbnail);
+.noFade()
+                .into(holder.thumbnail, new Callback() {
+
+                    @Override
+                    public void onSuccess() {
+
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                   Picasso.get()
+                   .load(holder.mItem.getThumbnail())
+                           .placeholder(R.drawable.progress_loader)
+                           .error(R.drawable.progress_loader)
+                           .resize(Resources.getSystem().getDisplayMetrics().widthPixels,0)
+                           .noFade()
+                           .into(holder.thumbnail);
+                    }
+
+
+                });
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (null != mListener) {
-                    //TODO : show video
-                }
+                Fragment f = new YoutubeVideoPlayerFragment();
+                Bundle bundle = new Bundle();
+                bundle.putString(VIDEO_ID, holder.mItem.getId());
+                bundle.putString(VIDEO_TITLE, holder.mItem.getTitle());
+                f.setArguments(bundle);
+                fragmentManager.beginTransaction().replace(R.id.fragment_container, f).addToBackStack(null).commit();
             }
         });
     }

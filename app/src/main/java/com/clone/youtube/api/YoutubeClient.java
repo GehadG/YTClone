@@ -1,6 +1,8 @@
-package com.clone.youtube.util;
+package com.clone.youtube.api;
 
+import com.clone.youtube.models.CommentSearchResult;
 import com.clone.youtube.models.YoutubeSearchResult;
+import com.clone.youtube.util.Converter;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -15,8 +17,6 @@ import rx.Subscriber;
 
 public class YoutubeClient {
     private static YoutubeClient ourInstance ;
-    //TODO : Define config or properties file to contain the api key
-
     private YouTube youtube;
     private YoutubeService service;
     private YoutubeClient() {
@@ -43,14 +43,28 @@ public class YoutubeClient {
             @Override
             public void call(Subscriber<? super YoutubeSearchResult> subscriber) {
                 try {
-                    subscriber.onNext(Converter.convertToVideoModel(service.search(query,pageToken)));    // Pass on the data to subscriber
-                    subscriber.onCompleted();     // Signal about the completion subscriber
+                    subscriber.onNext(Converter.convertToVideoModel(service.search(query,pageToken)));
+                    subscriber.onCompleted();
                 } catch (Exception e) {
-                    subscriber.onError(e);        // Signal about the error to subscriber
+                    subscriber.onError(e);
                 }
             }
         });
 
+
+    }
+    public Observable<CommentSearchResult> getComments(final String videoId, final String pageToken){
+        return Observable.create(new Observable.OnSubscribe<CommentSearchResult>() {
+            @Override
+            public void call(Subscriber<? super CommentSearchResult> subscriber) {
+                try {
+                    subscriber.onNext(Converter.convertToCommentModel(service.getComments(videoId,pageToken)));
+                    subscriber.onCompleted();
+                } catch (Exception e) {
+                    subscriber.onError(e);
+                }
+            }
+        });
 
     }
 
