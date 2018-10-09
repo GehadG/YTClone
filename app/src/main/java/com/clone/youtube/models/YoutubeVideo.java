@@ -7,13 +7,14 @@ public class YoutubeVideo {
     private String description;
     private long publishedAt;
     private String channelTitle;
-    public YoutubeVideo(String id, String thumbnail, String title, String description, long publishedAt,String channelTitle) {
+
+    public YoutubeVideo(String id, String thumbnail, String title, String description, long publishedAt, String channelTitle) {
         this.id = id;
         this.thumbnail = thumbnail;
         this.title = title;
         this.description = description;
         this.publishedAt = publishedAt;
-        this.channelTitle=channelTitle;
+        this.channelTitle = channelTitle;
     }
 
     public String getChannelTitle() {

@@ -26,29 +26,33 @@ import java.util.List;
 
 public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.ViewHolder> {
 
-    private final OnListFragmentInteractionListener mListener;
-    private  List<YoutubeVideo> mValues;
     private static final String VIDEO_ID = "videoId";
-    private static final String VIDEO_TITLE ="videoTitle" ;
+    private static final String VIDEO_TITLE = "videoTitle";
+    private final OnListFragmentInteractionListener mListener;
+    private List<YoutubeVideo> mValues;
     private FragmentManager fragmentManager;
-    public VideoListAdapter( OnListFragmentInteractionListener listener,FragmentManager fragmentManager) {
-this.fragmentManager=fragmentManager;
+
+    public VideoListAdapter(OnListFragmentInteractionListener listener, FragmentManager fragmentManager) {
+        this.fragmentManager = fragmentManager;
         mListener = listener;
     }
-public void clear(){
-        if(mValues!=null)
-        mValues.clear();
+
+    public void clear() {
+        if (mValues != null)
+            mValues.clear();
         notifyDataSetChanged();
-}
+    }
+
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.fragment_youtubevideo, parent, false);
         return new ViewHolder(view);
     }
-    public void addVideos(List<YoutubeVideo> videos){
-        if(mValues==null){
-            mValues=new ArrayList<>();
+
+    public void addVideos(List<YoutubeVideo> videos) {
+        if (mValues == null) {
+            mValues = new ArrayList<>();
         }
         mValues.addAll(videos);
         notifyDataSetChanged();
@@ -60,11 +64,11 @@ public void clear(){
         holder.videoTitle.setText(mValues.get(position).getTitle());
         holder.vDetails.setText(createDetails(mValues.get(position)));
         Picasso.get()
-                .load("http://img.youtube.com/vi/"+mValues.get(position).getId()+"/maxresdefault.jpg")
+                .load("http://img.youtube.com/vi/" + mValues.get(position).getId() + "/maxresdefault.jpg")
                 .placeholder(R.drawable.progress_loader)
                 .error(R.drawable.progress_loader)
-                .resize(Resources.getSystem().getDisplayMetrics().widthPixels,0)
-.noFade()
+                .resize(Resources.getSystem().getDisplayMetrics().widthPixels, 0)
+                .noFade()
                 .into(holder.thumbnail, new Callback() {
 
                     @Override
@@ -74,13 +78,13 @@ public void clear(){
 
                     @Override
                     public void onError(Exception e) {
-                   Picasso.get()
-                   .load(holder.mItem.getThumbnail())
-                           .placeholder(R.drawable.progress_loader)
-                           .error(R.drawable.progress_loader)
-                           .resize(Resources.getSystem().getDisplayMetrics().widthPixels,0)
-                           .noFade()
-                           .into(holder.thumbnail);
+                        Picasso.get()
+                                .load(holder.mItem.getThumbnail())
+                                .placeholder(R.drawable.progress_loader)
+                                .error(R.drawable.progress_loader)
+                                .resize(Resources.getSystem().getDisplayMetrics().widthPixels, 0)
+                                .noFade()
+                                .into(holder.thumbnail);
                     }
 
 
@@ -101,13 +105,13 @@ public void clear(){
     private String createDetails(YoutubeVideo youtubeVideo) {
         PrettyTime p = new PrettyTime();
         String buffer = " · ";
-        return youtubeVideo.getChannelTitle()+buffer+p.format(new Date(youtubeVideo.getPublishedAt()));
+        return youtubeVideo.getChannelTitle() + buffer + p.format(new Date(youtubeVideo.getPublishedAt()));
     }
 
     @Override
     public int getItemCount() {
-        if(mValues==null){
-            mValues=new ArrayList<>();
+        if (mValues == null) {
+            mValues = new ArrayList<>();
         }
         return mValues.size();
     }
@@ -124,7 +128,7 @@ public void clear(){
             mView = view;
             videoTitle = (TextView) view.findViewById(R.id.videoTitle);
             vDetails = (TextView) view.findViewById(R.id.videoDetails);
-            thumbnail=(ImageView)view.findViewById(R.id.thumbnail);
+            thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
         }
 
     }

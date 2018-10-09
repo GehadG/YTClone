@@ -4,7 +4,7 @@ public class YoutubeComment {
     private String authorName;
     private String authorImage;
     private long publishedAt;
-    private  String comment;
+    private String comment;
 
     public YoutubeComment(String authorName, String authorImage, long publishedAt, String comment) {
         this.authorName = authorName;

@@ -12,7 +12,7 @@ import com.clone.youtube.fragments.YoutubeVideoFragment;
 import com.clone.youtube.fragments.YoutubeVideoPlayerFragment;
 import com.clone.youtube.youtubeclone.R;
 
-public class MainActivity extends AppCompatActivity implements YoutubeVideoFragment.OnListFragmentInteractionListener ,YoutubeVideoPlayerFragment.OnListFragmentInteractionListener{
+public class MainActivity extends AppCompatActivity implements YoutubeVideoFragment.OnListFragmentInteractionListener, YoutubeVideoPlayerFragment.OnListFragmentInteractionListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -20,7 +20,8 @@ import java.util.List;
 public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHolder> {
 
     private final OnListFragmentInteractionListener mListener;
-    private  List<YoutubeComment> mValues;
+    private List<YoutubeComment> mValues;
+
     public CommentsAdapter(OnListFragmentInteractionListener listener) {
         mListener = listener;
     }
@@ -35,20 +36,22 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         holder.mItem = mValues.get(position);
-     holder.prepareView();
+        holder.prepareView();
 
     }
-    public void addComments(List<YoutubeComment> comments){
-        if(mValues==null){
-            mValues=new ArrayList<>();
+
+    public void addComments(List<YoutubeComment> comments) {
+        if (mValues == null) {
+            mValues = new ArrayList<>();
         }
         mValues.addAll(comments);
         notifyDataSetChanged();
     }
+
     @Override
     public int getItemCount() {
-        if(mValues==null){
-            mValues=new ArrayList<>();
+        if (mValues == null) {
+            mValues = new ArrayList<>();
         }
         return mValues.size();
     }
@@ -65,12 +68,12 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
             mView = view;
             mUserName = (TextView) view.findViewById(R.id.name);
             mComment = (TextView) view.findViewById(R.id.description);
-            profilePic=(CircularImageView) view.findViewById(R.id.profile_image);
+            profilePic = (CircularImageView) view.findViewById(R.id.profile_image);
         }
 
 
         public void prepareView() {
-            mUserName.setText(createDetails(mItem.getAuthorName(),mItem.getPublishedAt()));
+            mUserName.setText(createDetails(mItem.getAuthorName(), mItem.getPublishedAt()));
             mComment.setText(mItem.getComment());
             Picasso.get()
                     .load(mItem.getAuthorImage())
@@ -80,10 +83,11 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
                     .into(profilePic);
 
         }
-        private String createDetails(String username,long publishedAt) {
+
+        private String createDetails(String username, long publishedAt) {
             PrettyTime p = new PrettyTime();
             String buffer = " · ";
-            return username+buffer+p.format(new Date(publishedAt));
+            return username + buffer + p.format(new Date(publishedAt));
         }
     }
 }
